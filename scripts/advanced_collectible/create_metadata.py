@@ -6,6 +6,13 @@ from scripts.helpful_scripts import get_breed
 from pathlib import Path
 import requests
 import json
+import os
+
+breed_to_image_uri = {
+    "PUG": "https://ipfs.io/ipfs/QmSsYRx3LpDAb1GZQm7zZ1AuHZjfbPkD6J7s9r41xu1mf8?filename=pug.png",
+    "SHIBA_INU": "https://ipfs.io/ipfs/QmYx6GsYAKnNzZ9A6NvEKV9nf1VaDzJrqDR23Y8YSkebLU?filename=shiba-inu.png",
+    "ST_BERNARD": "https://ipfs.io/ipfs/QmUPjADFGEKmfohdTaNcWhp7VGk26h5jXDA7v3VtTnTLcW?filename=st-bernard.png",
+}
 
 
 def main():
@@ -28,11 +35,16 @@ def main():
             collectible_metadata["name"] = breed
             collectible_metadata["description"] = f"An adorable {breed} pup!"
             image_filename = "./img/" + breed.lower().replace("_", "-") + ".png"
-            image_url = upload_to_ipfs(image_filename)
+
+            image_url = None
+            if os.getenv("UPLOAD_IPFS") == "true":
+                image_url = upload_to_ipfs(image_filename)
+            image_url = image_url if image_url else breed_to_image_uri[breed]
             collectible_metadata["image"] = image_url
             with open(metadata_file_name, "w") as file:
                 json.dump(collectible_metadata, file)
-            upload_to_ipfs(metadata_file_name)
+            if os.getenv("UPLOAD_IPFS") == "true":
+                upload_to_ipfs(metadata_file_name)
 
 
 def upload_to_ipfs(filepath):
